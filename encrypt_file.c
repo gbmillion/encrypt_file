@@ -46,20 +46,21 @@ int decrypt(char * input){
 	unsigned char *buff;
 	const char* fname = input;
 	const char* fname2 = "decrypted.txt";
-
+	//select crypto  algorithm & mode
 	crypt = mcrypt_module_open("twofish", NULL, "cfb", NULL);
 	iv_size = (mcrypt_enc_get_iv_size) (crypt);
 	key_size = (mcrypt_enc_get_key_size) (crypt);
-
+	//load key from file
 	FILE * kfp = fopen("key.txt","r");
 	i = fread( key, key_size, 1,kfp);
 	if(i<=0)exit(1);
 	fclose(kfp);
-
+	i=0;
 	buff = malloc(iv_size);
+	//Initialize crypto
 	mcrypt_generic_init( crypt, key, key_size, buff);
 	if (crypt == MCRYPT_FAILED) exit(1);
-
+	//open up input & output files
 	FILE * fp = fopen(fname, "r");
     if(!fp) {
         perror("Failed to load input file.\n");
@@ -70,10 +71,9 @@ int decrypt(char * input){
         perror("Failed to load output file.\n");
         exit(1);
     }
+    //loop until end of file for input
     while ((c = fgetc(fp)) != EOF) {
-    	printf("%d:",c);
-    	err = mdecrypt_generic( crypt, &c, 1);
-    	printf("%d\n",c);
+    	err = mdecrypt_generic( crypt, &c, 1);//decrypt file stream
     	fputc(c,fp2);
     	if (err != 0)exit(1);
     }
@@ -91,19 +91,21 @@ int encrypt (char * input){
 	const char* fname = input;
 	const char* fname2 = "output.txt";
 
+	//pick the crypto  algorithm & mode
 	crypt = mcrypt_module_open("twofish", NULL, "cfb", NULL);
 	iv_size = (mcrypt_enc_get_iv_size) (crypt);
 	key_size = (mcrypt_enc_get_key_size) (crypt);
+	//randomly genorate key based on time for seeding
 	srand((unsigned) time(&t));
 	for (i=0; i < key_size;i++){
 		key[i] = rand() % 127;
 	}
 
 	buff = malloc(iv_size);
+	//Initialize crypto
 	mcrypt_generic_init( crypt, key, key_size, buff);
 	if (crypt == MCRYPT_FAILED) exit(1);
-
-	printf("The key is: %s\n",key);
+	//save key to file
 	FILE* fp = fopen("key.txt", "w");
 	if(!fp) {
 		perror("Failed to open key file.\n");
@@ -112,7 +114,7 @@ int encrypt (char * input){
 	i = fwrite( key, key_size,  1, fp );
 	if (i<0)exit (1);
     fclose(fp);
-
+    //open files
 	fp = fopen(fname, "r");
     if(!fp) {
         perror("Failed to load input file.\n");
@@ -122,11 +124,9 @@ int encrypt (char * input){
     if(!fp2) {
         perror("Failed to load output file.\n");
         exit(1);
-    }
+    }//loop until end of input file
     while ((c = fgetc(fp)) != EOF) {
-    	printf("%d:",c);
-    	err = mcrypt_generic( crypt, &c, 1);
-    	printf("%d\n",c);
+    	err = mcrypt_generic( crypt, &c, 1);//encrypt file stream
     	fputc(c,fp2);
     	if (err != 0)exit(1);
     }
