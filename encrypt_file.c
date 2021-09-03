@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <mcrypt.h>
+#include "crypt.h"
+
 int encrypt(char * input);
 int decrypt(char * input);
 int main(int argc, char *argv[]){
